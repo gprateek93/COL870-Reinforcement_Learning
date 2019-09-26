@@ -24,7 +24,8 @@ class environment:
         self.dealerCardSum = dealerCard[0]
         self.firstCardDrawn  = True
         self.player = Player(playerCard,dealerCard)
-
+        return self.player.getState()
+    
     def drawNewCard(self):
         '''returns the value of the new card drawn from the deck. If the card is red then a negative value is returned otherwise a positive value is returned'''
         newCardValue = np.random.randint(self.minCardValue,self.maxCardValue+1)
@@ -63,7 +64,6 @@ class environment:
             if self.dealerCardSum < self.gameLowerBound:
                 self.dealerCardSum,self.dealerIndicators = self.modifySum(self.dealerCardSum,self.dealerIndicators,0)
 
-
     def modifySum(self,playerSum,indicators,mode):
         if(mode == 0):
             #add 10
@@ -100,20 +100,20 @@ class environment:
         if(self.firstCardDrawn):
             #initial check
             self.firstCardDrawn = False
+            if self.isBust(self.dealerCardSum) and self.isBust(self.player.playerSum):
+                done = True
+                return (self.player.getState(),0,done)
             if self.isBust(self.dealerCardSum):
                 done = True
                 return (self.player.getState(),1,done)
             if self.isBust(self.player.playerSum):
-                print("here")
                 done = True
                 return (self.player.getState(),-1,done)
-            if self.isBust(self.dealerCardSum) and self.isBust(self.player.playerSum):
-                done = True
-                return (self.player.getState(),0,done)
         
         if action == 0:
             #agent sticks
             self.evaluateDealerPolicy()
+            #print(self.dealerCardSum)
             if (self.isBust(self.dealerCardSum) or self.player.playerSum > self.dealerCardSum):
                 done = True
                 return (self.player.getState(),1,done)
@@ -127,9 +127,9 @@ class environment:
         else:
             #agent hits
             newCard = self.drawNewCard()
-            print(self.player.state)
-            print("newCard is")
-            print(newCard)
+            ##print(self.player.state)
+            #print("newCard is")
+            #print(newCard)
             self.player.evaluate(newCard)
             if self.player.playerSum > self.gameUpperBound:
                 playerSum,indicators =self.modifySum(self.player.playerSum,self.player.indicators,1)
